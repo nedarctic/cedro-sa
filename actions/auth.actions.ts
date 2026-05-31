@@ -34,6 +34,7 @@ export async function LoginAction(formData: FormData): Promise<LoginState> {
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: "include",
         });
 
         if (!response.ok) {
@@ -49,9 +50,26 @@ export async function LoginAction(formData: FormData): Promise<LoginState> {
             path: "/",
         });
 
+        (await cookies()).set("refresh_token", responseData.refresh_token, {
+            httpOnly: true,
+            secure: true,
+            path: "/",
+        });
+
         return { success: true };
     } catch (error) {
         console.error('Error during login:', error);
         return { success: false, error: 'An unexpected error occurred' };
+    }
+}
+
+export async function LogoutAction() {
+    try {
+        (await cookies()).delete("access_token");
+        (await cookies()).delete("refresh_token");
+        return {success: true};
+    } catch (error) {
+        console.error('Error during logout:', error);
+        return {success: false};
     }
 }

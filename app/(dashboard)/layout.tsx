@@ -1,9 +1,10 @@
-import { AppSidebar } from "@/components/app-sidebar";
+import AppSidebarWrapper from "@/components/app-sidebar-wrapper";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-export default async function DashboardLayout({children}: {children: React.ReactNode}){
-    return (
-        <SidebarProvider
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+
+  return (
+    <SidebarProvider
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 72)",
@@ -11,10 +12,10 @@ export default async function DashboardLayout({children}: {children: React.React
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" />
+      <AppSidebarWrapper variant="inset" />
       <SidebarInset>
         {children}
       </SidebarInset>
-      </SidebarProvider>
-    );
+    </SidebarProvider>
+  );
 }

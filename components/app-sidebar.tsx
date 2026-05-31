@@ -15,24 +15,22 @@ import {
 } from "@/components/ui/sidebar"
 import {
   ChartBarIcon,
-  CommandIcon,
   FolderIcon,
   LayoutDashboardIcon,
   ListIcon,
+  SettingsIcon,
   UsersIcon,
-  SettingsIcon
+  BookIcon
 } from "lucide-react"
+import Link from "next/link"
+import { useTransition, useState } from 'react'
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
+  
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/",
       icon: (
         <LayoutDashboardIcon
         />
@@ -40,7 +38,7 @@ const data = {
     },
     {
       title: "Tours",
-      url: "#",
+      url: "/tours",
       icon: (
         <ListIcon
         />
@@ -48,15 +46,23 @@ const data = {
     },
     {
       title: "Itineraries",
-      url: "#",
+      url: "/itineraries",
       icon: (
         <ChartBarIcon
         />
       ),
     },
     {
+      title: "Bookings",
+      url: "/bookings",
+      icon: (
+        <BookIcon
+        />
+      ),
+    },
+    {
       title: "Blogs",
-      url: "#",
+      url: "/blogs",
       icon: (
         <FolderIcon
         />
@@ -64,24 +70,38 @@ const data = {
     },
     {
       title: "Team",
-      url: "#",
+      url: "/team",
       icon: (
         <UsersIcon
         />
       ),
     },
 
-{
+    {
       title: "Settings",
-      url: "#",
+      url: "/settings",
       icon: (
         <SettingsIcon
         />
       ),
-    },  ],
+    },],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export type User = {
+  name: string;
+  email: string;
+  role: UserRole;
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+enum UserRole {
+  ADMIN,
+  SUPER_ADMIN
+}
+
+export function AppSidebar({ user, ...props }: { user: User, props: React.ComponentProps<typeof Sidebar> }) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -91,19 +111,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <a href="#">
-                <CommandIcon className="size-5!" />
+              <Link href="/">
                 <span className="text-base font-semibold">Cedro Adventures</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        </SidebarContent>
+      </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )
