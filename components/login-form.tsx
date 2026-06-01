@@ -54,9 +54,9 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
+          <CardTitle>Welcome back to Cedro Adventures!</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your email below to login to your Cedro Adventures account
           </CardDescription>
         </CardHeader>
         <CardContent>

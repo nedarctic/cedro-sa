@@ -40,11 +40,13 @@ export function NavUser({
     router.push("/login");
   };
 
-  const avatar = user.name
-  .split(" ")
-  .map((n) => n[0])
-  .join("")
-  .toUpperCase();
+  const name = user?.name ?? "";
+  const avatar = name
+    .split(" ")
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
 
   return (
     <SidebarMenu>

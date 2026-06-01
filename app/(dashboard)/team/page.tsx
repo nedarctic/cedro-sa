@@ -1,16 +1,17 @@
-import { SiteHeader } from "@/components/site-header";
+import { getTeamMembers } from "@/actions/team.actions";
+import TeamClient from "./team-client";
 
-export default function Page() {
-  return (
-    <div>
-      <SiteHeader title="Team" />
-      <div className="flex flex-1 flex-col">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col items-center min-h-screen w-full justify-center">
-            <h1>Team</h1>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+export default async function Page() {
+  const res = await getTeamMembers();
+
+  const teamMembers =
+    res.success
+      ? res.data.map((member: any) => ({
+        id: member.id,
+        name: member.name,
+        designation: member.designation,
+      }))
+      : [];
+
+  return <TeamClient initialData={teamMembers} />;
 }
