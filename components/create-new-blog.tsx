@@ -8,12 +8,12 @@ import {
     FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { addTeamMember } from "@/actions/team.actions";
+import { createBlog } from "@/actions/blogs.actions";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Textarea } from "./ui/textarea";
 
-export function CreateTeamMemberInputGroup() {
+export function CreateNewBlogComponent() {
 
     const [loading, setLoading] = useState(false);
 
@@ -24,16 +24,16 @@ export function CreateTeamMemberInputGroup() {
         const formData = new FormData(form);
         setLoading(true);
 
-        const result = await addTeamMember(formData);
+        const result = await createBlog(formData);
 
         setLoading(false);
         if (!result.success) {
-            toast.error("Update failed", {
+            toast.error("Blog creation failed", {
                 description: result.error ?? "Something went wrong.",
             });
         } else {
-            toast.success("Team member created successfully", {
-                description: "The new team member has been added.",
+            toast.success("Blog created successfully", {
+                description: "The new blog has been added.",
             });
             form.reset();
         }
@@ -42,30 +42,30 @@ export function CreateTeamMemberInputGroup() {
         <form onSubmit={handleSubmit}>
             <FieldGroup>
                 <Field>
-                    <FieldLabel htmlFor="name">Name</FieldLabel>
-                    <Input id="name" name="name" placeholder="Jordan Lee" />
+                    <FieldLabel htmlFor="title">Title</FieldLabel>
+                    <Input id="title" name="title" placeholder="Blog Title" />
                 </Field>
 
                 <Field>
-                    <FieldLabel htmlFor="designation">Designation</FieldLabel>
+                    <FieldLabel htmlFor="date">Date</FieldLabel>
                     <Input
-                        id="designation"
-                        name="designation"
-                        type="text"
-                        placeholder="Operations Officer"
+                        id="date"
+                        name="date"
+                        type="date"
+                        placeholder="2026-05-01"
                     />
                 </Field>
 
                 <Field>
-                    <FieldLabel htmlFor="description">Description</FieldLabel>
+                    <FieldLabel htmlFor="excerpt">Excerpt</FieldLabel>
                     <Field>
-                        <FieldDescription>Enter a short description for the team member.</FieldDescription>
-                        <Textarea id="description" placeholder="Type your message here." />
+                        <FieldDescription>Enter a short excerpt for the blog post.</FieldDescription>
+                        <Textarea id="excerpt" name="excerpt" maxLength={200} placeholder="Write short excerpt here" />
                     </Field>
                 </Field>
 
                 <Field>
-                    <FieldLabel htmlFor="image">Profile Picture</FieldLabel>
+                    <FieldLabel htmlFor="image">Blog Image</FieldLabel>
                     <Input
                         id="image"
                         name="image"

@@ -24,10 +24,8 @@ export default function TeamClient({ initialData }: { initialData: any[] }) {
               <h1 className="font-extrabold">Team</h1>
               <Link href="/team/create" className="flex bg-black rounded-lg p-2 text-white text-sm items-center justify-center gap-3">Add new member <PlusIcon color="white" size={16} /></Link>
             </div>
-
-            <TableData headers={headers} data={teamMembers} />
+            <TableData headers={headers} data={teamMembers} path="team" caption="Team Members" />
           </div>
-
         </div>
       </div>
     </div>

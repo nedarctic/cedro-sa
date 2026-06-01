@@ -1,3 +1,5 @@
+'use client'
+
 import {
     Table,
     TableBody,
@@ -9,7 +11,7 @@ import {
 } from "@/components/ui/table"
 import { useRouter } from "next/navigation"
 
-export function TableData({ headers, data, caption }: { headers: { label: string, key: string }[], data: any, caption?: string }) {
+export function TableData({ headers, data, caption, path }: { headers: { label: string, key: string }[], data: any, caption?: string; path?: string }) {
     const router = useRouter();
     return (
         <Table>
@@ -23,7 +25,7 @@ export function TableData({ headers, data, caption }: { headers: { label: string
             </TableHeader>
             <TableBody>
                 {data.map((row: any, rowIndex: number) => (
-                    <TableRow key={rowIndex} onClick={() => router.push(`/team/${row.id}`)}>
+                    <TableRow key={rowIndex} onClick={() => path && router.push(`${path}/${row.id}`)}>
                         {headers.map((header, headerIndex) => (
                             <TableCell key={headerIndex} className={`w-25 ${headerIndex === headers.length - 1 ? 'text-right' : ''}`}>
                                 {row[header.key]}

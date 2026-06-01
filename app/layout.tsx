@@ -1,7 +1,8 @@
+import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Google_Sans } from "next/font/google";
+import { Google_Sans } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
-import { TooltipProvider } from "@/components/ui/tooltip"
 
 const googleSans = Google_Sans({
   variable: "--font-google-sans",
@@ -26,6 +27,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <TooltipProvider>
           {children}
+          <Toaster richColors position="top-right" />
         </TooltipProvider>
       </body>
     </html>

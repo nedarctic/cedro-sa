@@ -16,6 +16,9 @@ import {
 import { Field, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { updateTeamMember } from "@/actions/team.actions";
+import { Label } from "./ui/label";
+
+import { toast } from "sonner";
 
 export function EditTeamMemberDialog({ member }: { member: any }) {
   const [isPending, startTransition] = useTransition();
@@ -30,9 +33,14 @@ export function EditTeamMemberDialog({ member }: { member: any }) {
       const res = await updateTeamMember(member.id, formData);
 
       if (res.success) {
+        toast.success("Team member updated successfully", {
+          description: "Changes have been saved.",
+        });
         setOpen(false);
       } else {
-        console.error(res.error);
+        toast.error("Update failed", {
+          description: res.error ?? "Something went wrong.",
+        });
       }
     });
   };
@@ -54,7 +62,9 @@ export function EditTeamMemberDialog({ member }: { member: any }) {
 
           <FieldGroup className="space-y-4 py-4">
             <Field>
+              <Label htmlFor="name">Name</Label>
               <Input
+                id="name"
                 name="name"
                 defaultValue={member.name}
                 placeholder="Name"
@@ -62,7 +72,9 @@ export function EditTeamMemberDialog({ member }: { member: any }) {
             </Field>
 
             <Field>
+              <Label htmlFor="designation">Designation</Label>
               <Input
+                id="designation"
                 name="designation"
                 defaultValue={member.designation}
                 placeholder="Designation"
@@ -70,7 +82,9 @@ export function EditTeamMemberDialog({ member }: { member: any }) {
             </Field>
 
             <Field>
+              <Label htmlFor="description">Description</Label>
               <Input
+                id="description"
                 name="description"
                 defaultValue={member.description}
                 placeholder="Description"
@@ -78,7 +92,9 @@ export function EditTeamMemberDialog({ member }: { member: any }) {
             </Field>
 
             <Field>
+              <Label htmlFor="image">Image</Label>
               <Input
+                id="image"
                 type="file"
                 name="image"
                 accept="image/png, image/jpeg"

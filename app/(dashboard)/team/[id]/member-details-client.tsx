@@ -34,7 +34,7 @@ export default function MemberDetailsClient({
     const handleDelete = async () => {
         const res = await removeTeamMember(data.id);
 
-        if(res.success) {
+        if (res.success) {
             alert("Team member removed successfully");
             router.push("/team");
         } else {
@@ -55,14 +55,24 @@ export default function MemberDetailsClient({
                         <div className="flex gap-8 items-start">
 
                             {/* IMAGE */}
-                            <div className="relative w-75 h-80 rounded-lg overflow-hidden shrink-0 bg-muted">
-                                <Image
-                                    src={data.memberImage}
-                                    alt={data.name}
-                                    fill
-                                    className="object-cover object-top"
-                                />
+                            <div className="flex flex-col space-y-4">
+                                <div className="relative w-75 h-80 rounded-lg overflow-hidden shrink-0 bg-muted">
+                                    <Image
+                                        src={data.memberImage}
+                                        alt={data.name}
+                                        fill
+                                        className="object-cover object-top"
+                                    />
+                                </div>
+
+                                {/* ACTIONS */}
+                                <div className="pt-4 flex flex-col gap-2">
+                                    <EditTeamMemberDialog member={data} />
+
+                                    <DeleteTeamMemberDialog memberId={data.id} />
+                                </div>
                             </div>
+
 
                             {/* DETAILS + ACTIONS */}
                             <div className="flex flex-col gap-6 text-sm w-full max-w-md">
@@ -95,12 +105,7 @@ export default function MemberDetailsClient({
                                     </div>
                                 </div>
 
-                                {/* ACTIONS */}
-                                <div className="border-t pt-4 flex flex-col gap-2">
-                                    <EditTeamMemberDialog member={data} />
-
-                                    <DeleteTeamMemberDialog memberId={data.id} />
-                                </div>
+                                
 
                             </div>
                         </div>
