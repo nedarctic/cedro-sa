@@ -20,8 +20,6 @@ export async function LoginAction(formData: FormData): Promise<LoginState> {
         password: formData.get('password'),
     });
 
-    console.log('Parsed Data:', parsedData);
-
     if (parsedData.error) {
         const errorMessage = parsedData.error.message;
         return { success: false, error: errorMessage };
@@ -43,7 +41,6 @@ export async function LoginAction(formData: FormData): Promise<LoginState> {
         }
 
         const responseData = await response.json();
-        console.log('Server response:', responseData);
         (await cookies()).set("access_token", responseData.access_token, {
             httpOnly: true,
             secure: true,

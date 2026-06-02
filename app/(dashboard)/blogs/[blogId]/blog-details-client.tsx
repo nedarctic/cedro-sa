@@ -6,6 +6,8 @@ import { type BlogDetails } from "./page";
 import Link from "next/link";
 import { PlusIcon } from "lucide-react";
 import { AddNewStorySectionDialog } from "@/components/add-new-story-section-dialog";
+import UpdateBlogStorySectionDialog from "@/components/update-blog-story-section-dialog";
+import { DeleteBlogStorySectionDialog } from "@/components/delete-blog-story-section-dialog";
 
 export function BlogDetailsClient({ data }: { data: BlogDetails }) {
 
@@ -140,13 +142,29 @@ export function BlogDetailsClient({ data }: { data: BlogDetails }) {
                                                     </h3>
                                                     <div className="space-y-4">
                                                         {data.story.sections.map((section) => (
-                                                            <div key={section.id} className="border rounded-lg p-4">
-                                                                <h4 className="font-medium text-lg mb-2">
-                                                                    {section.subtitle}
-                                                                </h4>
-                                                                <p className="leading-relaxed whitespace-pre-wrap">
-                                                                    {section.content}
-                                                                </p>
+                                                            <div key={section.id} className="border rounded-lg p-4 space-y-3">
+                                                                <div className="flex flex-col gap-2">
+                                                                    <h4 className="font-medium text-lg mb-2">
+                                                                        {section.subtitle}
+                                                                    </h4>
+
+                                                                    <p className="leading-relaxed whitespace-pre-wrap">
+                                                                        {section.content}
+                                                                    </p>
+                                                                </div>
+
+                                                                <div className="flex gap-2 justify-end">
+                                                                    <UpdateBlogStorySectionDialog
+                                                                        storyId={data.story?.id!}
+                                                                        sectionId={section.id}
+                                                                        subtitle={section.subtitle}
+                                                                        content={section.content}
+                                                                    />
+                                                                    <DeleteBlogStorySectionDialog
+                                                                        storyId={data.story?.id!}
+                                                                        sectionId={section.id}
+                                                                    />
+                                                                </div>
                                                             </div>
                                                         ))}
                                                     </div>

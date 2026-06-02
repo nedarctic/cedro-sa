@@ -35,7 +35,5 @@ export default async function BlogDetailsPage({ params }: { params: Promise<{ bl
         throw new Error(error);
     }
 
-    console.log('Blog details', data);
-
     return <BlogDetailsClient data={data} />;
 }

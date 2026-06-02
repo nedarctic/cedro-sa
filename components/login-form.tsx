@@ -29,8 +29,6 @@ export function LoginForm({
     error: undefined,
   };
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const [loginState, setLoginState] = useState<LoginState>(initialState)
   const router = useRouter();
 
@@ -43,10 +41,9 @@ export function LoginForm({
 
     if (result.success) {
       setLoginState({ success: true });
-      console.log(result);
       router.push("/");
     } else {
-      console.log('Login failed:', result.error);
+      setLoginState({ success: false, error: result.error });
     }
   };
 

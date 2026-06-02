@@ -233,9 +233,6 @@ export async function updateTeamMember(memberId: string, formData: FormData) {
     if (!res.ok) {
         const errorText = await res.text();
 
-        console.log("Update failed:", res.status);
-        console.log("Response:", errorText);
-
         return {
             success: false,
             error: errorText,

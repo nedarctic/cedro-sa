@@ -5,7 +5,6 @@ import Link from "next/link";
 
 export default function BlogClient({ initialData }: { initialData: any[] }) {
 
-    console.log("Initial Data:", initialData); // Debugging line to check the data structure
     const headers = [
         { label: "Title", key: "title" },
         { label: "Date", key: "date" },
