@@ -3,6 +3,7 @@
 import { cookies } from "next/headers"
 import z from 'zod'
 import { revalidatePath } from "next/cache"
+import { refreshToken } from "./auth.actions"
 
 export type TeamMemberOperationStatus = {
     success: boolean;
@@ -48,25 +49,13 @@ export async function addTeamMember(formData: FormData): Promise<TeamMemberOpera
 
         // 🔥 HANDLE EXPIRED TOKEN
         if (res.status === 401) {
-            const refreshRes = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refresh_token: refresh_token }),
-            });
+            const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
                 return { success: false, error: "Session expired. Please login again." };
             }
 
-            const tokens = await refreshRes.json();
-
-            // update cookies
-            cookieStore.set('access_token', tokens.accessToken);
-            cookieStore.set('refresh_token', tokens.refreshToken);
-
-            access_token = tokens.accessToken;
+            const { access_token } = await refreshRes.json();
 
             // retry request
             res = await sendRequest(access_token);
@@ -86,21 +75,40 @@ export async function addTeamMember(formData: FormData): Promise<TeamMemberOpera
 }
 
 export async function removeTeamMember(memberId: string): Promise<TeamMemberOperationStatus> {
-    const access_token = (await cookies()).get('access_token')?.value;
+    const cookieStore = await cookies();
+    const access_token = cookieStore.get('access_token')?.value;
 
-    try {
-        const res = await fetch(`${process.env.BACKEND_API}/team/${memberId}`, {
+    const sendRequest = async (access_token: string) => {
+        return await fetch(`${process.env.BACKEND_API}/team/${memberId}`, {
             method: 'DELETE',
             headers: {
                 Authorization: `Bearer ${access_token}`
             }
         })
+    }
+    try {
+        let res = await sendRequest(access_token!);
+
+        if (res.status === 401) {
+            const refreshRes = await refreshToken();
+
+            if (!refreshRes.ok) {
+                return { success: false, error: "Session expired. Please login again." };
+            }
+
+            const { access_token } = await refreshRes.json();
+
+            // retry request
+            res = await sendRequest(access_token);
+        }
 
         if (!res.ok) {
             return { success: false, error: "Something went wrong" }
         }
 
-        return { success: true }
+        revalidatePath('/team');
+
+        return { success: true };
     } catch (err) {
         return { success: false, error: "An unknown error occurred." }
     }
@@ -127,23 +135,13 @@ export async function getTeamMembers(): Promise<{ success: boolean; error?: stri
 
         // 🔥 HANDLE EXPIRED TOKEN
         if (res.status === 401) {
-            const refreshRes = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refresh_token: refresh_token }),
-            });
+            const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
                 return { success: false, error: "Session expired. Please login again." };
             }
 
             const tokens = await refreshRes.json();
-
-            // update cookies
-            cookieStore.set('access_token', tokens.accessToken);
-            cookieStore.set('refresh_token', tokens.refreshToken);
 
             access_token = tokens.accessToken;
 
@@ -166,14 +164,31 @@ export async function getTeamMembers(): Promise<{ success: boolean; error?: stri
 export async function getTeamMember(memberId: string): Promise<{ success: boolean; error?: string; data?: any }> {
     const access_token = (await cookies()).get('access_token')?.value;
 
-    try {
-        const res = await fetch(`${process.env.BACKEND_API}/team/${memberId}`, {
+    const sendRequest = async (access_token: string) => {
+        return await fetch(`${process.env.BACKEND_API}/team/${memberId}`, {
             method: 'GET',
             headers: {
                 Authorization: `Bearer ${access_token}`
             }
         });
+    }
 
+    try {
+
+        let res = await sendRequest(access_token!);
+
+        if (res.status === 401) {
+            const refreshRes = await refreshToken();
+
+            if (!refreshRes.ok) {
+                return { success: false, error: "Session expired. Please login again." }
+            }
+
+            const { access_token } = await refreshRes.json()
+
+            // retry request again
+            res = await sendRequest(access_token);
+        }
 
         if (!res.ok) {
             return { success: false, error: "Something went wrong" }
@@ -222,25 +237,41 @@ export async function updateTeamMember(memberId: string, formData: FormData) {
         return { success: false, error: parsedData.error.message };
     }
 
-    const res = await fetch(`${process.env.BACKEND_API}/team/${memberId}`, {
-        method: "PATCH",
-        headers: {
-            Authorization: `Bearer ${access_token}`,
-        },
-        body: formData,
-    });
-
-    if (!res.ok) {
-        const errorText = await res.text();
-
-        return {
-            success: false,
-            error: errorText,
-        };
+    const sendRequest = async (access_token: string) => {
+        return await fetch(`${process.env.BACKEND_API}/team/${memberId}`, {
+            method: "PATCH",
+            headers: {
+                Authorization: `Bearer ${access_token}`,
+            },
+            body: formData,
+        });
     }
 
-    revalidatePath("/team");
-    revalidatePath(`/team/${memberId}`);
+    try {
+        let res = await sendRequest(access_token!);
 
-    return { success: true };
+        if (res.status === 401) {
+            const refreshRes = await refreshToken();
+
+            if (!refreshRes.ok) {
+                return { success: false, error: "Session expired. Please login again." }
+            }
+
+            const { access_token } = await refreshRes.json();
+
+            // retry request
+            res = await sendRequest(access_token);
+        }
+
+        if (!res.ok) {
+            return { success: false, error: "Something went wrong" };
+        }
+
+        const data = await res.json()
+        return { success: true, data }
+    } catch (error) {
+        return { success: false, error: error instanceof Error ? error.message : "An unknown error occurred." }
+    }
+
+
 }

@@ -1,6 +1,7 @@
 'use server'
 
 import { cookies } from "next/headers"
+import { refreshToken } from "./auth.actions";
 
 export async function getProfileInfo() {
     const cookieStore = await cookies();
@@ -23,26 +24,16 @@ export async function getProfileInfo() {
 
         // If access token expired → try refresh
         if (res.status === 401 || res.status === 403) {
-            const refreshRes = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refreshToken: refresh_token }),
-            });
+            const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
                 throw new Error("Session expired");
             }
 
-            const tokens = await refreshRes.json();
-
-            // Update cookies
-            cookieStore.set("access_token", tokens.accessToken);
-            cookieStore.set("refresh_token", tokens.refreshToken);
+            const {access_token} = await refreshRes.json();
 
             // retry request with new token
-            res = await fetchProfile(tokens.accessToken);
+            res = await fetchProfile(access_token);
         }
 
         if (!res.ok) {

@@ -44,12 +44,14 @@ export async function LoginAction(formData: FormData): Promise<LoginState> {
         (await cookies()).set("access_token", responseData.access_token, {
             httpOnly: true,
             secure: true,
+            sameSite: "strict",
             path: "/",
         });
 
         (await cookies()).set("refresh_token", responseData.refresh_token, {
             httpOnly: true,
             secure: true,
+            sameSite: "none",
             path: "/",
         });
 
@@ -64,9 +66,40 @@ export async function LogoutAction() {
     try {
         (await cookies()).delete("access_token");
         (await cookies()).delete("refresh_token");
-        return {success: true};
+        return { success: true };
     } catch (error) {
         console.error('Error during logout:', error);
-        return {success: false};
+        return { success: false };
     }
+}
+
+export async function refreshToken() {
+    const cookieStore = await cookies();
+    const refresh_token = cookieStore.get("refresh_token")?.value;
+
+    const res = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({refresh_token})
+    });
+
+    const data = await res.json();
+
+    cookieStore.set("access_token", data.access_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/",
+    });
+
+    cookieStore.set("refresh_token", data.newRefreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/",
+    });
+
+    return res;
 }

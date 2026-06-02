@@ -3,6 +3,7 @@
 import z from 'zod';
 import { revalidatePath } from "next/cache";
 import { cookies } from 'next/headers';
+import { refreshToken } from './auth.actions';
 
 export async function createBlog(formData: FormData) {
     const cookieStore = await cookies();
@@ -40,13 +41,7 @@ export async function createBlog(formData: FormData) {
 
         // 🔥 HANDLE EXPIRED TOKEN
         if (res.status === 401) {
-            const refreshRes = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refresh_token: refresh_token }),
-            });
+            const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
                 return { success: false, error: "Session expired. Please login again." };
@@ -106,13 +101,7 @@ export async function createStoryForBlog(blogId: string, formData: FormData) {
 
         // 🔥 HANDLE EXPIRED TOKEN
         if (res.status === 401) {
-            const refreshRes = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refresh_token: refresh_token }),
-            });
+            const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
                 return { success: false, error: "Session expired. Please login again." };
@@ -172,13 +161,7 @@ export async function addSectionToStory(storyId: string, formData: FormData) {
 
         // 🔥 HANDLE EXPIRED TOKEN
         if (res.status === 401) {
-            const refreshRes = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refresh_token: refresh_token }),
-            });
+            const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
                 return { success: false, error: "Session expired. Please login again." };
@@ -223,13 +206,7 @@ export async function getBlogs() {
 
         // 🔥 HANDLE EXPIRED TOKEN
         if (res.status === 401) {
-            const refreshRes = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refresh_token: refresh_token }),
-            });
+            const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
                 return { success: false, error: "Session expired. Please login again." };
@@ -274,13 +251,7 @@ export async function getBlogDetails(blogId: string) {
 
         // 🔥 HANDLE EXPIRED TOKEN
         if (res.status === 401) {
-            const refreshRes = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refresh_token: refresh_token }),
-            });
+            const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
                 return { success: false, error: "Session expired. Please login again." };
@@ -325,13 +296,7 @@ export async function getStoryByBlogId(blogId: string) {
 
         // 🔥 HANDLE EXPIRED TOKEN
         if (res.status === 401) {
-            const refreshRes = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refresh_token: refresh_token }),
-            });
+            const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
                 return { success: false, error: "Session expired. Please login again." };
@@ -392,13 +357,7 @@ export async function updateBlogStorySection(blogId: string, sectionId: string, 
 
         // 🔥 HANDLE EXPIRED TOKEN
         if (res.status === 401) {
-            const refreshRes = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refresh_token: refresh_token }),
-            });
+            const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
                 return { success: false, error: "Session expired. Please login again." };
@@ -444,13 +403,7 @@ export async function deleteBlogStorySection(storyId: string, sectionId: string)
 
         // 🔥 HANDLE EXPIRED TOKEN
         if (res.status === 401) {
-            const refreshRes = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refresh_token: refresh_token }),
-            });
+            const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
                 return { success: false, error: "Session expired. Please login again." };

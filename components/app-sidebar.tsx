@@ -45,8 +45,8 @@ const data = {
       ),
     },
     {
-      title: "Itineraries",
-      url: "/itineraries",
+      title: "Destinations",
+      url: "/destinations",
       icon: (
         <ChartBarIcon
         />
