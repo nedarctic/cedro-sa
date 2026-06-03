@@ -7,7 +7,6 @@ export async function getProfileInfo() {
     const cookieStore = await cookies();
 
     let access_token = cookieStore.get("access_token")?.value;
-    let refresh_token = cookieStore.get("refresh_token")?.value;
 
     const fetchProfile = async (token: string | undefined) => {
         return fetch(`${process.env.BACKEND_API}/users/profile`, {

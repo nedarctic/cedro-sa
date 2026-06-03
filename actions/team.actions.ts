@@ -47,8 +47,7 @@ export async function addTeamMember(formData: FormData): Promise<TeamMemberOpera
     try {
         let res = await sendRequest(access_token);
 
-        // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401) {
+        if (res.status === 401  || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
@@ -89,7 +88,7 @@ export async function removeTeamMember(memberId: string): Promise<TeamMemberOper
     try {
         let res = await sendRequest(access_token!);
 
-        if (res.status === 401) {
+        if (res.status === 401  || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
@@ -133,8 +132,7 @@ export async function getTeamMembers(): Promise<{ success: boolean; error?: stri
 
         let res = await sendRequest(access_token);
 
-        // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401) {
+        if (res.status === 401  || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
@@ -177,7 +175,7 @@ export async function getTeamMember(memberId: string): Promise<{ success: boolea
 
         let res = await sendRequest(access_token!);
 
-        if (res.status === 401) {
+        if (res.status === 401  || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
@@ -250,7 +248,7 @@ export async function updateTeamMember(memberId: string, formData: FormData) {
     try {
         let res = await sendRequest(access_token!);
 
-        if (res.status === 401) {
+        if (res.status === 401  || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {

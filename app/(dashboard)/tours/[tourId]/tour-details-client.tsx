@@ -1,8 +1,10 @@
 import { BreadCrumb } from "@/components/breadcrumb";
-import { FileExclamationPoint } from 'lucide-react';
-import Image from "next/image";
-import { type Tour } from "../page";
+import { DeleteTourDialog } from "@/components/delete-tour-dialog";
 import { UpdateTourDialog } from "@/components/edit-tour-dialog";
+import { ArrowRight } from 'lucide-react';
+import Image from "next/image";
+import Link from "next/link";
+import { type Tour } from "../page";
 
 export function TourDetailsClient({ data }: { data?: Tour }) {
 
@@ -18,9 +20,12 @@ export function TourDetailsClient({ data }: { data?: Tour }) {
                 <div className="@container/main flex flex-1 flex-col gap-2">
                     <div className="p-6 w-full space-y-6">
 
-                        <h1 className="font-extrabold text-xl">
-                            {data?.title}
-                        </h1>
+                        <div className="flex justify-between">
+                            <h1 className="font-extrabold text-xl">
+                                {data?.title}
+                            </h1>
+                            <Link href={`/tours/${data?.id!}/create-edit-itinerary`} className="flex bg-black rounded-lg p-2 text-white text-sm items-center justify-center gap-3">Create/Edit Itinerary<ArrowRight color="white" size={16} /></Link>
+                        </div>
 
                         <div className="relative w-160 h-90">
                             <Image src={data?.tourImage!} alt="Tour image" fill className="object-cover object-top rounded-lg" />
@@ -46,15 +51,6 @@ export function TourDetailsClient({ data }: { data?: Tour }) {
                                     </ul>
                                 </div>
 
-                                <div>
-                                    {
-                                        data?.destination
-                                            ? <p><span>Destination:</span> <span className="font-extrabold">{data.destination.name}</span></p>
-                                            : <div className="flex flex-col gap-6">
-                                                <p className="flex gap-2 items-center font-bold text-red-600"><FileExclamationPoint size={24} color={"red"} />Destination not set.</p>
-                                            </div>
-                                    }
-                                </div>
                             </div>
 
                             <div className="flex flex-col w-full lg:w-1/2 space-y-4">
@@ -74,7 +70,12 @@ export function TourDetailsClient({ data }: { data?: Tour }) {
                             </div>
                         </div>
 
-                        <UpdateTourDialog tour={data!} />
+                        <div className="flex flex-col w-full lg:w-1/2 gap-2">
+                            <UpdateTourDialog tour={data!} />
+                            <DeleteTourDialog tourId={data?.id!} />
+                        </div>
+
+
                     </div>
                 </div>
             </div>

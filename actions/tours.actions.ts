@@ -1,9 +1,10 @@
 'use server'
 
-import { revalidatePath } from "next/cache";
+import { refresh, revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import z from 'zod';
 import { refreshToken } from "./auth.actions";
+import { access } from "fs";
 
 const createTourSchema = z.object({
     dates: z.string().min(1, "Dates are required"),
@@ -65,16 +66,18 @@ export async function createTour(formData: FormData) {
     try {
         let response = await sendRequest(access_token!);
 
-        if (response.status === 401 && refresh_token) {
-            // Attempt to refresh the access token
+        if (response.status === 401  || response.status === 403) {
+
             const refreshResponse = await refreshToken();
 
-            if (refreshResponse.ok) {
-                const { access_token: newAccessToken } = await refreshResponse.json();
-                response = await sendRequest(newAccessToken);
-            } else {
-                throw new Error("Failed to refresh access token");
+            if(!refreshResponse.ok){
+                const errorMessage = await refreshResponse.json();
+                return {success: false, error: errorMessage}
             }
+
+            const {access_token} = await refreshResponse.json();
+
+            response = await sendRequest(access_token);
         }
 
         if (!response.ok) {
@@ -151,17 +154,17 @@ export async function updateTour(tourId: string, formData: FormData): Promise<{ 
     try {
         let response = await sendRequest(access_token!);
 
-        if (response.status === 401 && refresh_token) {
+        if (response.status === 401 || response.status === 403) {
             const refreshResponse = await refreshToken()
 
-            if (refreshResponse.ok) {
-                const { access_token: newAccessToken } =
-                    await refreshResponse.json();
-
-                response = await sendRequest(newAccessToken);
-            } else {
-                throw new Error("Failed to refresh access token");
+            if (!refreshResponse.ok) {
+                const errorMessage = await refreshResponse.json();
+                return { success: false, error: errorMessage }
             }
+
+            const {access_token} = await refreshResponse.json();
+
+            response = await sendRequest(access_token);
         }
 
         if (!response.ok) {
@@ -199,16 +202,18 @@ export async function deleteTour(tourId: string) {
     try {
         let response = await sendRequest(access_token!);
 
-        if (response.status === 401 && refresh_token) {
-            // Attempt to refresh the access token
+        if (response.status === 401 || response.status === 403) {
+
             const refreshResponse = await refreshToken();
 
-            if (refreshResponse.ok) {
-                const { access_token: newAccessToken } = await refreshResponse.json();
-                response = await sendRequest(newAccessToken);
-            } else {
-                throw new Error("Failed to refresh access token");
+            if (!refreshResponse.ok) {
+                const errorMessage = await refreshResponse.json();
+                return { success: false, error: errorMessage }
             }
+
+            const { access_token } = await refreshResponse.json();
+
+            response = await sendRequest(access_token);
         }
 
         if (!response.ok) {
@@ -240,15 +245,15 @@ export async function getTour(tourId: string) {
         let response = await sendRequest(access_token!);
 
         if (response.status === 401 && refresh_token) {
-            // Attempt to refresh the access token
-            const refreshResponse = await refreshToken();
+            const refreshRes = await refreshToken();
 
-            if (refreshResponse.ok) {
-                const { access_token: newAccessToken } = await refreshResponse.json();
-                response = await sendRequest(newAccessToken);
-            } else {
-                throw new Error("Failed to refresh access token");
+            if (!refreshRes.ok) {
+                return { success: false, error: await refreshRes.json() }
             }
+
+            const { access_token } = await refreshRes.json();
+
+            response = await sendRequest(access_token);
         }
 
         if (!response.ok) {
@@ -278,26 +283,26 @@ export async function getTours() {
     }
 
     try {
-        let response = await sendRequest(access_token!);
+        let res = await sendRequest(access_token!);
 
-        if (response.status === 401 && refresh_token) {
-            // Attempt to refresh the access token
+        if (res.status === 401 || res.status === 403) {
             const refreshResponse = await refreshToken();
 
-            if (refreshResponse.ok) {
-                const { access_token: newAccessToken } = await refreshResponse.json();
-                response = await sendRequest(newAccessToken);
-            } else {
-                throw new Error("Failed to refresh access token");
+            if (!refreshResponse.ok) {
+                return { success: false, error: "Session expired. Please log in." }
             }
+
+            const { access_token } = await refreshResponse.json();
+
+            res = await sendRequest(access_token);
         }
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Failed to fetch tours: ${errorData.message || response.statusText}`);
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(`Failed to fetch tours: ${errorData.message || res.statusText}`);
         }
 
-        const data = await response.json();
+        const data = await res.json();
         return { success: true, data };
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : String(error) };

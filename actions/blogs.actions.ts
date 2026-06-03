@@ -40,7 +40,7 @@ export async function createBlog(formData: FormData) {
         let res = await sendRequest(access_token);
 
         // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401) {
+        if (res.status === 401 || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
@@ -100,7 +100,7 @@ export async function createStoryForBlog(blogId: string, formData: FormData) {
         let res = await sendRequest(access_token);
 
         // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401) {
+        if (res.status === 401 || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
@@ -160,7 +160,7 @@ export async function addSectionToStory(storyId: string, formData: FormData) {
         let res = await sendRequest(access_token);
 
         // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401) {
+        if (res.status === 401 || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
@@ -205,7 +205,7 @@ export async function getBlogs() {
         let res = await sendRequest(access_token);
 
         // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401) {
+        if (res.status === 401 || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
@@ -250,7 +250,7 @@ export async function getBlogDetails(blogId: string) {
         let res = await sendRequest(access_token);
 
         // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401) {
+        if (res.status === 401 || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
@@ -295,7 +295,7 @@ export async function getStoryByBlogId(blogId: string) {
         let res = await sendRequest(access_token);
 
         // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401) {
+        if (res.status === 401 || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
@@ -356,7 +356,7 @@ export async function updateBlogStorySection(blogId: string, sectionId: string, 
         let res = await sendRequest(access_token);
 
         // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401) {
+        if (res.status === 401 || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
@@ -402,7 +402,7 @@ export async function deleteBlogStorySection(storyId: string, sectionId: string)
         let res = await sendRequest(access_token);
 
         // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401) {
+        if (res.status === 401 || res.status === 403) {
             const refreshRes = await refreshToken();
 
             if (!refreshRes.ok) {
