@@ -6,7 +6,9 @@ export default async function Page() {
   const {success, error, data}: {success: boolean, error?: string, data?: any} = await getDestinations();
 
   if(!success){
-    console.log('Error fetching destinations')
+    console.log('Error fetching destinations', error)
+  } else {
+    console.log('Destinations:', data);
   }
 
   return (
