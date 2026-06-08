@@ -68,7 +68,6 @@ export function LoginForm({
       }))
 
       if (!res?.ok) {
-        console.log('Error during login:', res?.error!)
         setLoginState(prev => ({ ...prev, error: res?.error! }))
       } else {
         setLoginState(prev => ({ ...prev, error: undefined, success: true }));
