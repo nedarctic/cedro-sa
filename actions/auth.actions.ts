@@ -76,16 +76,21 @@ export async function LogoutAction() {
 export async function refreshToken() {
     const cookieStore = await cookies();
     const refresh_token = cookieStore.get("refresh_token")?.value;
+    const access_token = cookieStore.get("access_token")?.value;
+
+    console.log("Access token before:", access_token)
 
     const res = await fetch(`${process.env.BACKEND_API}/auth/refresh`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({refresh_token})
+        credentials: "include",
     });
 
     const data = await res.json();
+
+    console.log('Access token after refresh:', data.access_token)
 
     cookieStore.set("access_token", data.access_token, {
         httpOnly: true,

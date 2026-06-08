@@ -1,4 +1,4 @@
-import { getBlogDetails } from "@/actions/blogs.actions";
+import { getBlogDetails } from "@/lib/helpers";
 import { BlogDetailsClient } from "./blog-details-client";
 
 export type BlogDetails = {

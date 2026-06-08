@@ -1,5 +1,5 @@
-import { getItinerary } from "@/actions/itineraries.actions";
-import { getTour } from "@/actions/tours.actions";
+import { getItinerary } from "@/lib/helpers/itineraries.helpers";
+import { getTour } from "@/lib/helpers/tours.helpers";
 import { type Itinerary, type Tour } from "../../page";
 import { CreateEditItineraryClient } from "./create-edit-itinerary-client";
 

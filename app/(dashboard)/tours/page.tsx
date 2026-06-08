@@ -1,5 +1,5 @@
 import { TourClient } from "./tour-client";
-import { getTours } from "@/actions/tours.actions";
+import { getTours } from "@/lib/helpers/tours.helpers";
 
 export type Tour = {
   id: string;

@@ -14,7 +14,6 @@ export async function getProfileInfo() {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
-            cache: 'no-store',
         });
     };
 

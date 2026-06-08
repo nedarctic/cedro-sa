@@ -4,6 +4,7 @@ import { cookies } from "next/headers"
 import z from 'zod'
 import { revalidatePath } from "next/cache"
 import { refreshToken } from "./auth.actions"
+import { access } from "fs"
 
 export type TeamMemberOperationStatus = {
     success: boolean;
@@ -128,6 +129,8 @@ export async function getTeamMembers(): Promise<{ success: boolean; error?: stri
         });
     }
 
+    console.log('Access token before in teams:', access_token)
+
     try {
 
         let res = await sendRequest(access_token);
@@ -142,6 +145,8 @@ export async function getTeamMembers(): Promise<{ success: boolean; error?: stri
             const tokens = await refreshRes.json();
 
             access_token = tokens.accessToken;
+
+            console.log('Access token after refresh in teams', access_token)
 
             // retry request
             res = await sendRequest(access_token);

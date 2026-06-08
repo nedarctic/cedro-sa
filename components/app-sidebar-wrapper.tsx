@@ -1,4 +1,4 @@
-import { getProfileInfo } from "@/actions/profile.auth";
+import { getProfileInfo } from "@/lib/helpers/user.helpers";
 import { AppSidebar } from "./app-sidebar";
 
 export default async function AppSidebarWrapper(props: any) {

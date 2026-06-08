@@ -24,7 +24,7 @@ export function EditTeamMemberDialog({ member }: { member: any }) {
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);

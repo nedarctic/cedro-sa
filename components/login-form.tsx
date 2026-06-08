@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { useState, useTransition } from "react"
+import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { LoginAction, LoginState } from "@/actions/auth.actions"
+import { useState } from "react"
 
 export function LoginForm({
   className,
@@ -27,23 +27,55 @@ export function LoginForm({
   const initialState = {
     success: false,
     error: undefined,
+    loading: false
   };
+
+  type LoginState = {
+    success: boolean;
+    error?: string,
+    loading: boolean;
+  }
 
   const [loginState, setLoginState] = useState<LoginState>(initialState)
   const router = useRouter();
 
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
 
-    const result = await LoginAction(formData);
+    try {
+      setLoginState(prev => ({
+        ...prev,
+        loading: true
+      }))
 
-    if (result.success) {
-      setLoginState({ success: true });
-      router.push("/");
-    } else {
-      setLoginState({ success: false, error: result.error });
+      const email = formData.get('email');
+      const password = formData.get('password');
+
+      const res = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+        callbackUrl: '/'
+      })
+
+      console.log(res);
+
+      setLoginState(prev => ({
+        ...prev,
+        loading: false
+      }))
+
+      if (!res?.ok) {
+        console.log('Error during login:', res?.error!)
+        setLoginState(prev => ({ ...prev, error: res?.error! }))
+      } else {
+        setLoginState(prev => ({ ...prev, error: undefined, success: true }));
+        router.push('/');
+      }
+    } catch (error) {
+      setLoginState(prev => ({ ...prev, error: error instanceof Error ? error.message : String(error), success: false }))
     }
   };
 
@@ -57,7 +89,7 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleLogin}>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -86,7 +118,7 @@ export function LoginForm({
                 />
               </Field>
               <Field>
-                <Button type="submit">Login</Button>
+                <Button disabled={loginState.loading} type="submit">Login</Button>
                 {loginState.error && (
                   <p className="text-sm text-destructive">
                     {loginState.error}

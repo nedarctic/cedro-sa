@@ -1,5 +1,5 @@
 import BlogClient from "./blog-client";
-import { getBlogs } from "@/actions/blogs.actions";
+import { getBlogs } from "@/lib/helpers/blogs.helpers";
 
 export default async function BlogPage() {
   

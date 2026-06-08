@@ -1,5 +1,5 @@
 import { TourDetailsClient } from "./tour-details-client";
-import { getTour } from "@/actions/tours.actions";
+import { getTour } from "@/lib/helpers/tours.helpers";
 import { type Tour } from "../page";
 
 export default async function TourDetailsPage ({params}: {params: Promise<{tourId: string}>}) {

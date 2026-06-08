@@ -3,6 +3,7 @@ import type { Itinerary } from "../../page";
 import Image from "next/image";
 import { CreateNewItineraryDialog } from "@/components/create-new-itinerary-dialog";
 import { DeleteItineraryDialog } from "@/components/delete-itinerary-dialog";
+import { EditItineraryDialog } from "@/components/edit-itinerary-dialog";
 
 export function CreateEditItineraryClient({ itinerary, tourId, tourTitle }: { itinerary?: Itinerary[], tourId: string, tourTitle: string }) {
 
@@ -41,7 +42,7 @@ export function CreateEditItineraryClient({ itinerary, tourId, tourTitle }: { it
                                         {itinerary.activities.map((activity, id) => (<li key={id}>{activity}</li>))}
                                     </ul>
                                 </div>
-
+                                <EditItineraryDialog itineraryId={itinerary.id} tourId={tourId} itinerary={itinerary} />
                                 <DeleteItineraryDialog itineraryId={itinerary.id} />
                             </div>
                         ))}

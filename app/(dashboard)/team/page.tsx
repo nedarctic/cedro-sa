@@ -1,4 +1,4 @@
-import { getTeamMembers } from "@/actions/team.actions";
+import { getTeamMembers } from "@/lib/helpers/teams.helpers";
 import TeamClient from "./team-client";
 
 export default async function Page() {

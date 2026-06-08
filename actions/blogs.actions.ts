@@ -201,6 +201,8 @@ export async function getBlogs() {
         });
     }
 
+    console.log('Access token before refresh in getBlogs action:', access_token)
+
     try {
         let res = await sendRequest(access_token);
 
@@ -215,6 +217,7 @@ export async function getBlogs() {
             const refreshData = await refreshRes.json();
             const newAccessToken = refreshData.access_token;
 
+            console.log('Access token after refresh in getBlogs action:', newAccessToken)
             // Retry original request with new access token
             res = await sendRequest(newAccessToken);
 
