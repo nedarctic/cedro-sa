@@ -17,7 +17,7 @@ export async function getDestinations() {
     const { accessToken } = session!; 
 
     try{
-        const res = await fetch(`${process.env.BACKEND_API}/tours/destinations`, {
+        const res = await fetch(`${process.env.BACKEND_API}/destinations`, {
             method: 'GET',
             headers: {
                 Authorization: `Bearer ${accessToken}`
