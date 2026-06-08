@@ -1,10 +1,17 @@
-'use client'
-
 import { BreadCrumb } from "@/components/breadcrumb";
 import { PlusIcon } from 'lucide-react';
 import Link from "next/link";
+import { getBookings } from "@/lib/helpers/bookings.helpers";
 
-export default function Page() {
+export default async function Page() {
+
+  const {success, error, data}: {success: boolean; error?: string; data?: any} = await getBookings();
+
+  if(!success){
+    console.log('An error occurred fetching bookings', error);
+  } else {
+    console.log('Bookings data', data);
+  }
 
   return (
     <div>
