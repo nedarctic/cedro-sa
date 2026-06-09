@@ -1,14 +1,13 @@
 'use server'
 
-import z from 'zod';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { getServerSession } from 'next-auth';
 import { revalidatePath } from "next/cache";
-import { cookies } from 'next/headers';
-import { refreshToken } from './auth.actions';
+import z from 'zod';
 
 export async function createBlog(formData: FormData) {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
+    const session = await getServerSession(authOptions);
+    const { accessToken } = session!;
 
     const createBlogSchema = z.object({
         title: z.string().min(1, "Title is required"),
@@ -37,40 +36,24 @@ export async function createBlog(formData: FormData) {
     }
 
     try {
-        let res = await sendRequest(access_token);
+        let res = await sendRequest(accessToken);
 
-        // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401 || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." };
-            }
-
-            const refreshData = await refreshRes.json();
-            const newAccessToken = refreshData.access_token;
-
-            // Retry original request with new access token
-            res = await sendRequest(newAccessToken);
-
-            if (!res.ok) {
-                return { success: false, error: "Failed to create blog after refreshing token." };
-            }
-        } else if (!res.ok) {
+        if (!res.ok) {
             return { success: false, error: "Failed to create blog." };
         }
 
+        const data = await res.json();
+
         revalidatePath("/blogs");
-        return { success: true };
+        return { success: true, data };
     } catch (error) {
         return { success: false, error: "An unexpected error occurred." };
     }
 }
 
 export async function createStoryForBlog(blogId: string, formData: FormData) {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
+    const session = await getServerSession(authOptions);
+    const { accessToken } = session!;
 
     const createStorySchema = z.object({
         intro: z.string().min(1, "Intro is required"),
@@ -97,40 +80,24 @@ export async function createStoryForBlog(blogId: string, formData: FormData) {
     }
 
     try {
-        let res = await sendRequest(access_token);
+        let res = await sendRequest(accessToken);
 
-        // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401 || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." };
-            }
-
-            const refreshData = await refreshRes.json();
-            const newAccessToken = refreshData.access_token;
-
-            // Retry original request with new access token
-            res = await sendRequest(newAccessToken);
-
-            if (!res.ok) {
-                return { success: false, error: "Failed to create story after refreshing token." };
-            }
-        } else if (!res.ok) {
+        if (!res.ok) {
             return { success: false, error: "Failed to create story." };
         }
 
+        const data = await res.json();
+
         revalidatePath("/blogs");
-        return { success: true };
+        return { success: true , data};
     } catch (error) {
         return { success: false, error: "An unexpected error occurred." };
     }
 }
 
 export async function addSectionToStory(storyId: string, formData: FormData) {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
+    const session = await getServerSession(authOptions);
+    const { accessToken } = session!;
 
     const createSectionSchema = z.object({
         subtitle: z.string().min(1, "Subtitle is required"),
@@ -157,168 +124,14 @@ export async function addSectionToStory(storyId: string, formData: FormData) {
     }
 
     try {
-        let res = await sendRequest(access_token);
+        let res = await sendRequest(accessToken);
 
-        // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401 || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." };
-            }
-
-            const refreshData = await refreshRes.json();
-            const newAccessToken = refreshData.access_token;
-
-            // Retry original request with new access token
-            res = await sendRequest(newAccessToken);
-
-            if (!res.ok) {
-                return { success: false, error: "Failed to add section after refreshing token." };
-            }
-        } else if (!res.ok) {
+        if (!res.ok) {
             return { success: false, error: "Failed to add section." };
         }
 
+        const data = await res.json();
         revalidatePath("/blogs");
-        return { success: true };
-    } catch (error) {
-        return { success: false, error: "An unexpected error occurred." };
-    }
-}
-
-export async function getBlogs() { 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
-
-    const sendRequest = async (token?: string) => {
-        return fetch(`${process.env.BACKEND_API}/blogs`, {
-            method: 'GET',
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-    }
-
-    console.log('Access token before refresh in getBlogs action:', access_token)
-
-    try {
-        let res = await sendRequest(access_token);
-
-        // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401 || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." };
-            }
-
-            const refreshData = await refreshRes.json();
-            const newAccessToken = refreshData.access_token;
-
-            console.log('Access token after refresh in getBlogs action:', newAccessToken)
-            // Retry original request with new access token
-            res = await sendRequest(newAccessToken);
-
-            if (!res.ok) {
-                return { success: false, error: "Failed to fetch blogs after refreshing token." };
-            }
-        } else if (!res.ok) {
-            return { success: false, error: "Failed to fetch blogs." };
-        }
-
-        const data = await res.json();
-        return { success: true, data };
-    } catch (error) {
-        return { success: false, error: "An unexpected error occurred." };
-    }
-}
-
-export async function getBlogDetails(blogId: string) {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
-
-    const sendRequest = async (token?: string) => {
-        return fetch(`${process.env.BACKEND_API}/blogs/${blogId}`, {
-            method: 'GET',
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-    }
-
-    try {
-        let res = await sendRequest(access_token);
-
-        // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401 || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." };
-            }
-
-            const refreshData = await refreshRes.json();
-            const newAccessToken = refreshData.access_token;
-
-            // Retry original request with new access token
-            res = await sendRequest(newAccessToken);
-
-            if (!res.ok) {
-                return { success: false, error: "Failed to fetch blog details after refreshing token." };
-            }
-        } else if (!res.ok) {
-            return { success: false, error: "Failed to fetch blog details." };
-        }
-
-        const data = await res.json();
-        return { success: true, data };
-    } catch (error) {
-        return { success: false, error: "An unexpected error occurred." };
-    }
-}
-
-export async function getStoryByBlogId(blogId: string) {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
-
-    const sendRequest = async (token?: string) => {
-        return fetch(`${process.env.BACKEND_API}/blogs/${blogId}/story`, {
-            method: 'GET',
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-    }
-
-    try {
-        let res = await sendRequest(access_token);
-
-        // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401 || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." };
-            }
-
-            const refreshData = await refreshRes.json();
-            const newAccessToken = refreshData.access_token;
-
-            // Retry original request with new access token
-            res = await sendRequest(newAccessToken);
-
-            if (!res.ok) {
-                return { success: false, error: "Failed to fetch story after refreshing token." };
-            }
-        } else if (!res.ok) {
-            return { success: false, error: "Failed to fetch story." };
-        }
-
-        const data = await res.json();
         return { success: true, data };
     } catch (error) {
         return { success: false, error: "An unexpected error occurred." };
@@ -326,9 +139,8 @@ export async function getStoryByBlogId(blogId: string) {
 }
 
 export async function updateBlogStorySection(blogId: string, sectionId: string, formData: FormData) {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
+    const session = await getServerSession(authOptions);
+    const { accessToken } = session!;
 
     const updateSectionSchema = z.object({
         subtitle: z.string().min(1, "Subtitle is required"),
@@ -356,40 +168,23 @@ export async function updateBlogStorySection(blogId: string, sectionId: string, 
     }
 
     try {
-        let res = await sendRequest(access_token);
+        let res = await sendRequest(accessToken);
 
-        // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401 || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." };
-            }
-
-            const refreshData = await refreshRes.json();
-            const newAccessToken = refreshData.access_token;
-
-            // Retry original request with new access token
-            res = await sendRequest(newAccessToken);
-
-            if (!res.ok) {
-                return { success: false, error: "Failed to update section after refreshing token." };
-            }
-        } else if (!res.ok) {
+        if (!res.ok) {
             return { success: false, error: "Failed to update section." };
         }
 
+        const data = await res.json();
         revalidatePath("/blogs");
-        return { success: true };
+        return { success: true, data };
     } catch (error) {
         return { success: false, error: "An unexpected error occurred." };
     }
 }
 
 export async function deleteBlogStorySection(storyId: string, sectionId: string) {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
+    const session = await getServerSession(authOptions);
+    const { accessToken } = session!;
 
     //  @Delete('story/:storyId/section/:sectionId')
     const sendRequest = async (token?: string) => {
@@ -402,31 +197,15 @@ export async function deleteBlogStorySection(storyId: string, sectionId: string)
     }
 
     try {
-        let res = await sendRequest(access_token);
+        let res = await sendRequest(accessToken);
 
-        // 🔥 HANDLE EXPIRED TOKEN
-        if (res.status === 401 || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." };
-            }
-
-            const refreshData = await refreshRes.json();
-            const newAccessToken = refreshData.access_token;
-
-            // Retry original request with new access token
-            res = await sendRequest(newAccessToken);
-
-            if (!res.ok) {
-                return { success: false, error: "Failed to delete section after refreshing token." };
-            }
-        } else if (!res.ok) {
+        if (!res.ok) {
             return { success: false, error: "Failed to delete section." };
         }
 
+        const data = await res.json();
         revalidatePath("/blogs");
-        return { success: true };
+        return { success: true, data };
     } catch (error) {
         return { success: false, error: "An unexpected error occurred." };
     }

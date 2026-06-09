@@ -1,21 +1,19 @@
 'use server'
 
-import { cookies } from "next/headers"
-import z from 'zod'
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { getServerSession } from "next-auth"
 import { revalidatePath } from "next/cache"
-import { refreshToken } from "./auth.actions"
-import { access } from "fs"
+import z from 'zod'
 
 export type TeamMemberOperationStatus = {
     success: boolean;
     error?: string;
+    data?: any
 }
 
 export async function addTeamMember(formData: FormData): Promise<TeamMemberOperationStatus> {
-    const cookieStore = await cookies();
-
-    let access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
+    const session = await getServerSession(authOptions);
+    const {accessToken} = session!;
 
     const addTeamMemberSchema = z.object({
         name: z.string().min(1),
@@ -35,31 +33,14 @@ export async function addTeamMember(formData: FormData): Promise<TeamMemberOpera
         return { success: false, error: parsedData.error.message };
     }
 
-    const sendRequest = async (token?: string) => {
-        return fetch(`${process.env.BACKEND_API}/team`, {
+    try {
+        let res = await fetch(`${process.env.BACKEND_API}/team`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${accessToken}`,
             },
             body: formData,
         });
-    };
-
-    try {
-        let res = await sendRequest(access_token);
-
-        if (res.status === 401  || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." };
-            }
-
-            const { access_token } = await refreshRes.json();
-
-            // retry request
-            res = await sendRequest(access_token);
-        }
 
         if (!res.ok) {
             return { success: false, error: "Failed to create team member" };
@@ -67,7 +48,8 @@ export async function addTeamMember(formData: FormData): Promise<TeamMemberOpera
 
         revalidatePath('/team');
 
-        return { success: true };
+        const data = await res.json();
+        return { success: true, data };
 
     } catch (err) {
         return { success: false, error: "An unknown error occurred." };
@@ -75,32 +57,16 @@ export async function addTeamMember(formData: FormData): Promise<TeamMemberOpera
 }
 
 export async function removeTeamMember(memberId: string): Promise<TeamMemberOperationStatus> {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
+    const session = await getServerSession(authOptions);
+    const {accessToken} = session!;
 
-    const sendRequest = async (access_token: string) => {
-        return await fetch(`${process.env.BACKEND_API}/team/${memberId}`, {
+    try {
+        let res = await fetch(`${process.env.BACKEND_API}/team/${memberId}`, {
             method: 'DELETE',
             headers: {
-                Authorization: `Bearer ${access_token}`
+                Authorization: `Bearer ${accessToken}`
             }
-        })
-    }
-    try {
-        let res = await sendRequest(access_token!);
-
-        if (res.status === 401  || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." };
-            }
-
-            const { access_token } = await refreshRes.json();
-
-            // retry request
-            res = await sendRequest(access_token);
-        }
+        });
 
         if (!res.ok) {
             return { success: false, error: "Something went wrong" }
@@ -114,99 +80,9 @@ export async function removeTeamMember(memberId: string): Promise<TeamMemberOper
     }
 }
 
-export async function getTeamMembers(): Promise<{ success: boolean; error?: string; data?: any }> {
-    const cookieStore = await cookies();
-
-    let access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
-
-    const sendRequest = async (token?: string) => {
-        return await fetch(`${process.env.BACKEND_API}/team`, {
-            method: 'GET',
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-    }
-
-    console.log('Access token before in teams:', access_token)
-
-    try {
-
-        let res = await sendRequest(access_token);
-
-        if (res.status === 401  || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." };
-            }
-
-            const tokens = await refreshRes.json();
-
-            access_token = tokens.accessToken;
-
-            console.log('Access token after refresh in teams', access_token)
-
-            // retry request
-            res = await sendRequest(access_token);
-        }
-
-        if (!res.ok) {
-            return { success: false, error: "Failed to get team members" };
-        }
-
-        const data = await res.json();
-
-        return { success: true, data };
-    } catch (err) {
-        return { success: false, error: "An unknown error occurred." }
-    }
-}
-
-export async function getTeamMember(memberId: string): Promise<{ success: boolean; error?: string; data?: any }> {
-    const access_token = (await cookies()).get('access_token')?.value;
-
-    const sendRequest = async (access_token: string) => {
-        return await fetch(`${process.env.BACKEND_API}/team/${memberId}`, {
-            method: 'GET',
-            headers: {
-                Authorization: `Bearer ${access_token}`
-            }
-        });
-    }
-
-    try {
-
-        let res = await sendRequest(access_token!);
-
-        if (res.status === 401  || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." }
-            }
-
-            const { access_token } = await refreshRes.json()
-
-            // retry request again
-            res = await sendRequest(access_token);
-        }
-
-        if (!res.ok) {
-            return { success: false, error: "Something went wrong" }
-        }
-
-        const data = await res.json();
-
-        return { success: true, data }
-    } catch (err) {
-        return { success: false, error: "An unknown error occurred" }
-    }
-}
-
 export async function updateTeamMember(memberId: string, formData: FormData) {
-    const access_token = (await cookies()).get('access_token')?.value;
+    const session = await getServerSession(authOptions);
+    const {accessToken} = session!;
 
     const image = formData.get("image") as File;
 
@@ -240,31 +116,14 @@ export async function updateTeamMember(memberId: string, formData: FormData) {
         return { success: false, error: parsedData.error.message };
     }
 
-    const sendRequest = async (access_token: string) => {
-        return await fetch(`${process.env.BACKEND_API}/team/${memberId}`, {
+    try {
+        let res = await fetch(`${process.env.BACKEND_API}/team/${memberId}`, {
             method: "PATCH",
             headers: {
-                Authorization: `Bearer ${access_token}`,
+                Authorization: `Bearer ${accessToken}`,
             },
             body: formData,
         });
-    }
-
-    try {
-        let res = await sendRequest(access_token!);
-
-        if (res.status === 401  || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." }
-            }
-
-            const { access_token } = await refreshRes.json();
-
-            // retry request
-            res = await sendRequest(access_token);
-        }
 
         if (!res.ok) {
             return { success: false, error: "Something went wrong" };

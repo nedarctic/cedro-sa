@@ -1,55 +1,14 @@
 'use server'
 
-import z from 'zod';
-import { cookies } from 'next/headers';
-import { refreshToken } from './auth.actions';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
-
-export async function getItinerary(tourId: string) {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-
-    // @Get('tour/:tourId')
-    const sendRequest = async (access_token: string) => {
-        return await fetch(`${process.env.BACKEND_API}/itineraries/tour/${tourId}`, {
-            method: 'GET',
-            headers: {
-                Authorization: `Bearer ${access_token}`,
-            },
-        });
-    }
-
-    try {
-        let res = await sendRequest(access_token!);
-
-        if (res.status === 401  || res.status === 403) {
-            let refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please log in again." }
-            }
-
-            const { access_token } = await refreshRes.json();
-
-            res = await sendRequest(access_token);
-        }
-
-        if (!res.ok) {
-            return { success: false, error: "Something went wrong." }
-        }
-
-        const data = await res.json();
-
-        return { success: true, data };
-    } catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : "An unknown error occurred." }
-    }
-}
+import z from 'zod';
 
 export async function createItinerary(tourId: string, formData: FormData) {
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
+    const session = await getServerSession(authOptions);
+    const {accessToken} = session!;
 
     const createItinerarySchema = z.object({
         day: z.string().min(1, "day is required"),
@@ -87,95 +46,55 @@ export async function createItinerary(tourId: string, formData: FormData) {
         });
     }
 
-    /*
-
-    @Post()
-    @UseInterceptors(FileInterceptor('dayImage'))
-    async createItinerary(
-        @Body() createItineraryDto: { tourId: string; day: string; title: string; activities: string[] },
-        @UploadedFile() dayImage: Express.Multer.File
-    ) {
-        const { tourId, day, title, activities } = createItineraryDto;
-        return this.itinerariesService.createItinerary(tourId, day, title, activities, dayImage);
-    }
-
-    */
-
     try {
-        let res = await sendRequest(access_token!);
-
-        if (res.status === 401  || res.status === 403) {
-            let refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please log in again." }
-            }
-
-            const { access_token } = await refreshRes.json();
-
-            res = await sendRequest(access_token);
-        }
+        let res = await sendRequest(accessToken!);
 
         if (!res.ok) {
             return { success: false, error: "Something went wrong." }
         }
 
+        const data = await res.json();
+
         revalidatePath(`/tours/${tourId}/create-edit-itinerary`)
 
-        return { success: true }
+        return { success: true, data }
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : "An unknown error occurred." }
     }
 }
 
 export async function deleteItinerary(itineraryId: string) {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-
-    console.log('Itinerary ID provided:', itineraryId)
-
-    const sendRequest = async (access_token: string) => {
-        return await fetch(`${process.env.BACKEND_API}/itineraries/${itineraryId}`, {
-            method: 'DELETE',
-            headers: {
-                Authorization: `Bearer ${access_token}`
-            }
-        })
-    }
+    const session = await getServerSession(authOptions);
+    const {accessToken} = session!;
 
     try {
-        let res = await sendRequest(access_token!);
-
-        if (res.status === 401  || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please login again." }
+        let res = await fetch(`${process.env.BACKEND_API}/itineraries/${itineraryId}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${accessToken}`
             }
-
-            const { access_token } = await refreshRes.json();
-
-            res = await sendRequest(access_token);
-        }
+        });
 
         if (!res.ok) {
             const errorMessage = await res.json();
             return { success: false, error: errorMessage || res.text }
         }
 
-        return { success: true };
+        const data = await res.json();
+
+        return { success: true, data };
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : "An unknown error occurred." }
     }
 }
 
 export async function updateItinerary(tourId: string, itineraryId: string, formData: FormData) {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
+    const session = await getServerSession(authOptions);
+    const {accessToken} = session!;
 
     const updateItinerarySchema = z.object({
-        day: z.string().optional(),
-        title: z.string().optional(),
+        day: z.string().min(1, 'day required').optional(),
+        title: z.string().min(1, 'title required').optional(),
         activities: z.array(z.string()).optional(),
         dayImage: z.instanceof(File).optional()
             .refine(file => !file || ['image/png', 'image/jpeg'].includes(file.type), { message: "Only JPEG and PNG files allowed." })
@@ -197,51 +116,24 @@ export async function updateItinerary(tourId: string, itineraryId: string, formD
         console.log('Error parsing itinerary update data:', validationErrorMessage);
         return { success: false, error: validationErrorMessage }
     }
-    /*
-    
-    @Patch(':id')
-    @UseInterceptors(FileInterceptor('dayImage'))
-    async updateItinerary(
-        @Param('id') id: string,
-        @Body() updateItineraryDto: { day: string; title: string; activities: string[] },
-        @UploadedFile() dayImage?: Express.Multer.File
-    ) {
-        const { day, title, activities } = updateItineraryDto;
-        return this.itinerariesService.updateItinerary(id, day, title, activities, dayImage);
-    }
-
-    */
-    const sendRequest = async (access_token: string) => {
-        return await fetch(`${process.env.BACKEND_API}/itineraries/${itineraryId}`, {
-            method: 'PATCH',
-            headers: {
-                Authorization: `Bearer ${access_token}`
-            },
-            body: formData,
-        })
-    }
 
     try {
-        let res = await sendRequest(access_token!);
-
-        if (res.status === 401  || res.status === 403) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: "Session expired. Please log in again." }
-            }
-
-            const { access_token } = await refreshRes.json();
-
-            res = await sendRequest(access_token);
-        }
+        let res = await fetch(`${process.env.BACKEND_API}/itineraries/${itineraryId}`, {
+            method: 'PATCH',
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            },
+            body: formData,
+        });
 
         if (!res.ok) {
             return { success: false, error: "Something went wrong" };
         }
 
-        revalidatePath(`/tours/${tourId}/create-edit-itinerary`)
-        return { success: true }
+        revalidatePath(`/tours/${tourId}/create-edit-itinerary`);
+        const data = await res.json();
+
+        return { success: true, data }
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : "An unknown error occurred." }
     }

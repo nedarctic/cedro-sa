@@ -1,9 +1,9 @@
 'use server'
 
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
 import z from 'zod';
-import { refreshToken } from "./auth.actions";
 
 const createTourSchema = z.object({
     dates: z.string().min(1, "Dates are required"),
@@ -16,10 +16,13 @@ const createTourSchema = z.object({
     title: z.string().min(1, "Title is required"),
     intro: z.string().min(1, "Introduction is required"),
 
-    image: z.instanceof(File).refine(
-        (file) => file.type.startsWith("image/"),
-        "Tour image must be an image file"
-    ),
+    image: z.instanceof(File)
+    .refine(file => ['image/png', 'image/jpeg'].includes(file.type), {
+        message: "Supported image types are PNG and JPEG"
+    })
+    .refine(file => file.size <= 5 * 1024 * 1024, {
+        message: "Max supported image size is 5MB"
+    }),
 
     included: z.array(z.string()).default([]),
     excluded: z.array(z.string()).default([]),
@@ -27,9 +30,8 @@ const createTourSchema = z.object({
 });
 
 export async function createTour(formData: FormData) {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
+    const session = await getServerSession(authOptions);
+    const { accessToken } = session!;
 
     const image = formData.get("image") as File;
 
@@ -52,32 +54,14 @@ export async function createTour(formData: FormData) {
         throw new Error(`Validation failed: ${parsedData.error.message}`);
     }
 
-    const sendRequest = async (token: string) => {
-        return await fetch(`${process.env.BACKEND_API}/tours`, {
+    try {
+        let response = await fetch(`${process.env.BACKEND_API}/tours`, {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${accessToken}`,
             },
             body: formData,
         });
-    }
-
-    try {
-        let response = await sendRequest(access_token!);
-
-        if (response.status === 401  || response.status === 403) {
-
-            const refreshResponse = await refreshToken();
-
-            if(!refreshResponse.ok){
-                const errorMessage = await refreshResponse.json();
-                return {success: false, error: errorMessage}
-            }
-
-            const {access_token} = await refreshResponse.json();
-
-            response = await sendRequest(access_token);
-        }
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -92,9 +76,8 @@ export async function createTour(formData: FormData) {
 }
 
 export async function updateTour(tourId: string, formData: FormData): Promise<{ success: boolean; data?: any; error?: string }> {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
+    const session = await getServerSession(authOptions);
+    const { accessToken } = session!;
 
     const updateTourSchema = z.object({
         title: z.string().min(1).optional(),
@@ -140,31 +123,14 @@ export async function updateTour(tourId: string, formData: FormData): Promise<{ 
         return { success: false, error: errorMessage }
     }
 
-    const sendRequest = async (token: string) => {
-        return await fetch(`${process.env.BACKEND_API}/tours/${tourId}`, {
+    try {
+        let response = await fetch(`${process.env.BACKEND_API}/tours/${tourId}`, {
             method: "PATCH",
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${accessToken}`,
             },
             body: formData,
         });
-    };
-
-    try {
-        let response = await sendRequest(access_token!);
-
-        if (response.status === 401 || response.status === 403) {
-            const refreshResponse = await refreshToken()
-
-            if (!refreshResponse.ok) {
-                const errorMessage = await refreshResponse.json();
-                return { success: false, error: errorMessage }
-            }
-
-            const {access_token} = await refreshResponse.json();
-
-            response = await sendRequest(access_token);
-        }
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -175,7 +141,8 @@ export async function updateTour(tourId: string, formData: FormData): Promise<{ 
 
         revalidatePath(`tours/${tourId}`);
 
-        return { success: true, data: await response.json() };
+        const data = await response.json();
+        return { success: true, data };
     } catch (error) {
         return {
             success: false,
@@ -185,123 +152,24 @@ export async function updateTour(tourId: string, formData: FormData): Promise<{ 
 }
 
 export async function deleteTour(tourId: string) {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
 
-    const sendRequest = async (token: string) => {
-        return await fetch(`${process.env.BACKEND_API}/tours/${tourId}`, {
-            method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-    }
+    const session = await getServerSession(authOptions);
+    const { accessToken } = session!;
 
     try {
-        let response = await sendRequest(access_token!);
-
-        if (response.status === 401 || response.status === 403) {
-
-            const refreshResponse = await refreshToken();
-
-            if (!refreshResponse.ok) {
-                const errorMessage = await refreshResponse.json();
-                return { success: false, error: errorMessage }
-            }
-
-            const { access_token } = await refreshResponse.json();
-
-            response = await sendRequest(access_token);
-        }
+        let response = await fetch(`${process.env.BACKEND_API}/tours/${tourId}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
 
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(`Failed to delete tour: ${errorData.message || response.statusText}`);
         }
 
-        return { success: true };
-    } catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : String(error) };
-    }
-}
-
-export async function getTour(tourId: string) {
-
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
-
-    const sendRequest = async (token: string) => {
-        return await fetch(`${process.env.BACKEND_API}/tours/${tourId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-    }
-
-    try {
-        let response = await sendRequest(access_token!);
-
-        if (response.status === 401 && refresh_token) {
-            const refreshRes = await refreshToken();
-
-            if (!refreshRes.ok) {
-                return { success: false, error: await refreshRes.json() }
-            }
-
-            const { access_token } = await refreshRes.json();
-
-            response = await sendRequest(access_token);
-        }
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Failed to fetch tour: ${errorData.message || response.statusText}`);
-        }
-
         const data = await response.json();
-        return { success: true, data };
-    } catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : String(error) };
-    }
-
-}
-
-export async function getTours() {
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-    const refresh_token = cookieStore.get('refresh_token')?.value;
-
-    const sendRequest = async (token: string) => {
-        return await fetch(`${process.env.BACKEND_API}/tours`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-    }
-
-    try {
-        let res = await sendRequest(access_token!);
-
-        if (res.status === 401 || res.status === 403) {
-            const refreshResponse = await refreshToken();
-
-            if (!refreshResponse.ok) {
-                return { success: false, error: "Session expired. Please log in." }
-            }
-
-            const { access_token } = await refreshResponse.json();
-
-            res = await sendRequest(access_token);
-        }
-
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(`Failed to fetch tours: ${errorData.message || res.statusText}`);
-        }
-
-        const data = await res.json();
         return { success: true, data };
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : String(error) };
