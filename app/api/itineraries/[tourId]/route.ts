@@ -1,76 +1,114 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { getToken } from "next-auth/jwt";
 import z from "zod";
 import { revalidatePath } from "next/cache";
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ tourId: string }> }) {
+export async function POST(
+    req: NextRequest,
+    { params }: { params: Promise<{ tourId: string }> }
+) {
+    const refreshedToken = req.headers.get('x-refreshed-access-token');
+    let token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+    console.log('Token:', token);
+
+    if (refreshedToken && token) {
+        // Override the token with the fresh one from middleware
+        token.access_token = refreshedToken;
+    }
+
+    if (!token?.access_token) {
+        return NextResponse.json(
+            { success: false, error: "Unauthorized" },
+            { status: 401 }
+        );
+    }
 
     const { tourId } = await params;
-    console.log('Tour ID:', tourId)
 
     const formData = await req.formData();
-
-    console.log('Form data at the route handler:', formData);
-
-    console.log('Day:', formData.get('day'))
-    console.log('Title:', formData.get('title'))
-    console.log('Activities:', formData.getAll('activities'));
-
-    const session = await getServerSession(authOptions);
-    const { accessToken } = session!;
-
-    console.log('Access token at the create itinerary route:', accessToken);
 
     const createItinerarySchema = z.object({
         day: z.string().min(1, "day is required"),
         title: z.string().min(1, "title is required"),
         activities: z.array(z.string()),
         dayImage: z
-            .instanceof(File, { message: "Image should be a file." })
-            .refine((file) => ['image/png', 'image/jpeg'].includes(file.type), { message: "Only PNG and JPEG images are allowed" })
-            .refine((file) => file.size <= 5 * 1024 * 1024, { message: "Max image size allowed is 5MB" })
+            .instanceof(File)
+            .refine((file) =>
+                ["image/png", "image/jpeg"].includes(file.type),
+                { message: "Only PNG and JPEG images are allowed" }
+            )
+            .refine((file) => file.size <= 5 * 1024 * 1024, {
+                message: "Max image size allowed is 5MB",
+            }),
     });
 
-
-    const rawImage = formData.get('dayImage');
-    const dayImage = rawImage instanceof File && rawImage.size > 0 ? rawImage : undefined;
+    const rawImage = formData.get("dayImage");
+    const dayImage =
+        rawImage instanceof File && rawImage.size > 0
+            ? rawImage
+            : undefined;
 
     const parsedData = createItinerarySchema.safeParse({
-        day: formData.get('day'),
-        title: formData.get('title'),
-        activities: formData.getAll('activities'),
-        dayImage
+        day: formData.get("day"),
+        title: formData.get("title"),
+        activities: formData.getAll("activities"),
+        dayImage,
     });
 
     if (!parsedData.success) {
-        const validationErrorMessage = parsedData.error.message;
-        return NextResponse.json({ success: false, error: validationErrorMessage })
-    }
-
-    const sendRequest = async (access_token: string) => {
-        return await fetch(`${process.env.BACKEND_API}/itineraries/${tourId}`, {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${access_token}`
+        return NextResponse.json(
+            {
+                success: false,
+                error: parsedData.error.message,
             },
-            body: formData,
-        });
+            { status: 400 }
+        );
     }
 
     try {
-        let res = await sendRequest(accessToken!);
+        const res = await fetch(
+            `${process.env.BACKEND_API}/itineraries/${tourId}`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token.access_token}`,
+                },
+                body: formData,
+            }
+        );
 
         if (!res.ok) {
-            return NextResponse.json({ success: false, error: "Something went wrong." })
+            const errText = await res.text();
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: errText || "Backend request failed",
+                },
+                { status: res.status }
+            );
         }
 
         const data = await res.json();
 
-        revalidatePath(`/tours/${tourId}/create-edit-itinerary`)
+        revalidatePath(
+            `/tours/${tourId}/create-edit-itinerary`
+        );
 
-        return NextResponse.json({ success: true, data });
+        return NextResponse.json({
+            success: true,
+            data,
+        });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "An unknown error occurred." });
+        return NextResponse.json(
+            {
+                success: false,
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : "Unknown error",
+            },
+            { status: 500 }
+        );
     }
 }

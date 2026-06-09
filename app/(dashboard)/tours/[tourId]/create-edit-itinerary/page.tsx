@@ -9,9 +9,9 @@ export default async function Page({ params }: { params: Promise<{ tourId: strin
     const {success: tourSuccess, data: tourData, error: tourError}: { success: boolean, data?: Tour, error?: string } = await getTour(tourId);
     
     if(!success){
-        console.error('Error fetching itinerary', error)
+        // console.error('Error fetching itinerary', error)
     } else {
-        console.log('Itineraries data', data)
+        // console.log('Itineraries data', data)
     }
 
     if(!tourSuccess){
