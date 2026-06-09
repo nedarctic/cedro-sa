@@ -11,6 +11,8 @@ function decodeExp(token: string): number {
 }
 
 async function refreshAccessToken(refreshToken: string, oldToken: any) {
+    console.log('PROXY RUNNING');
+
     const res = await fetch(`${process.env.NEST_API_URL}/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,6 +86,6 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|login|.*\\..*).*)",
+    "/((?!_next/static|_next/image|favicon.ico|login|.*\\..*).*)",
   ],
 };
