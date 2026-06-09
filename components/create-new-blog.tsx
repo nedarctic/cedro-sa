@@ -8,12 +8,14 @@ import {
     FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { createBlog } from "@/actions/blogs.actions";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Textarea } from "./ui/textarea";
+import { useRouter } from "next/navigation";
 
 export function CreateNewBlogComponent() {
+
+    const router = useRouter();
 
     const [loading, setLoading] = useState(false);
 
@@ -24,18 +26,26 @@ export function CreateNewBlogComponent() {
         const formData = new FormData(form);
         setLoading(true);
 
-        const result = await createBlog(formData);
+        // const result = await createBlog(formData);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BFF_API}/api/blogs`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+        })
 
         setLoading(false);
-        if (!result.success) {
+        if (!res.ok) {
+            const errorMessage = await res.json();
+            console.log('Error creating blog:', errorMessage)
             toast.error("Blog creation failed", {
-                description: result.error ?? "Something went wrong.",
+                description: res.statusText ?? "Something went wrong.",
             });
         } else {
             toast.success("Blog created successfully", {
                 description: "The new blog has been added.",
             });
             form.reset();
+            router.refresh();
         }
     }
     return (
