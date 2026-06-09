@@ -33,15 +33,15 @@ export function BlogDetailsClient({ data }: { data: BlogDetails }) {
                         <div className="flex flex-col gap-8 items-start">
 
                             {/* IMAGE */}
-                            <div className="flex flex-col space-y-4">
-                                <div className="relative w-175 h-100 rounded-lg overflow-hidden shrink-0 bg-muted">
-                                    <Image
-                                        src={data.blogImage}
-                                        alt={data.title}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
+
+                            <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                                <Image
+                                    src={data.blogImage}
+                                    alt={data.title}
+                                    fill
+                                    className="object-cover"
+                                />
+
                             </div>
 
                             {/* DETAILS */}
