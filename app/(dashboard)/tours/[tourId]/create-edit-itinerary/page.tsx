@@ -10,6 +10,8 @@ export default async function Page({ params }: { params: Promise<{ tourId: strin
     
     if(!success){
         console.error('Error fetching itinerary', error)
+    } else {
+        console.log('Itineraries data', data)
     }
 
     if(!tourSuccess){

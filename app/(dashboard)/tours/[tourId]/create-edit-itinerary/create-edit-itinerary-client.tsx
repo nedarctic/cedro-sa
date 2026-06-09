@@ -30,7 +30,7 @@ export function CreateEditItineraryClient({ itinerary, tourId, tourTitle }: { it
                             <div key={itinerary.id} className="flex flex-col gap-3 border border-gray-300 rounded-2xl p-6">
                                 <h1 className="font-semibold">{itinerary.title}</h1>
 
-                                <div className="relative w-150 h-80">
+                                <div className="relative w-full aspect-video">
                                     <Image src={itinerary.dayImage} alt={`${itinerary.title} image`} fill className="object-cover object-top rounded-lg" />
                                 </div>
 

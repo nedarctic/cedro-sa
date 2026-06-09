@@ -27,7 +27,7 @@ export function TourDetailsClient({ data }: { data?: Tour }) {
                             <Link href={`/tours/${data?.id!}/create-edit-itinerary`} className="flex bg-black rounded-lg p-2 text-white text-sm items-center justify-center gap-3">Create/Edit Itinerary<ArrowRight color="white" size={16} /></Link>
                         </div>
 
-                        <div className="relative w-160 h-90">
+                        <div className="relative w-full aspect-video">
                             <Image src={data?.tourImage!} alt="Tour image" fill className="object-cover object-top rounded-lg" />
                         </div>
 
