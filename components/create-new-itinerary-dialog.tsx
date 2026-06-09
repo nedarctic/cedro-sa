@@ -10,8 +10,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function CreateNewItineraryDialog({tourId}: {tourId: string}) {
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
 
     const [activities, setActivities] = useState<string[]>([""]);
@@ -53,19 +55,24 @@ export function CreateNewItineraryDialog({tourId}: {tourId: string}) {
 
         setLoading(true);
 
-        const result = await createItinerary(tourId, formData);
+        // const result = await createItinerary(tourId, formData);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BFF_API}/api/itineraries/${tourId}`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+        });
 
         setLoading(false);
 
-        if (!result.success) {
-            console.error('Error creating itinerary:', result.error)
+        if (!res.ok) {
+            console.error('Error creating itinerary:', res)
             toast.error("Itinerary creation failed", {
-                description: result.error ?? "Something went wrong.",
+                description: res.statusText ?? "Something went wrong.",
             });
         } else {
             toast.success("Itinerary created successfully");
             form.reset();
-
+            router.refresh();
             setActivities([""]);
         }
     };

@@ -1,6 +1,6 @@
 "use client"
 
-import { LogoutAction } from "@/actions/auth.actions"
+import { signOut } from "next-auth/react"
 import {
   Avatar,
   AvatarFallback,
@@ -34,11 +34,6 @@ export function NavUser({
   const { isMobile } = useSidebar()
 
   const router = useRouter();
-
-  const handleLogout = () => {
-    LogoutAction();
-    router.push("/login");
-  };
 
   const name = user?.name ?? "";
   const avatar = name
@@ -109,7 +104,7 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <div className="flex w-full gap-4 items-center" onClick={handleLogout}>
+              <div className="flex w-full gap-4 items-center" onClick={() => {signOut({callbackUrl: '/login', redirect: false})}}>
                 <LogOutIcon />
                 Log out
               </div>
