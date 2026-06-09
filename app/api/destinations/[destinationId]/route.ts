@@ -12,6 +12,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ de
         token.access_token = refreshedToken;
     }
 
+    if (!token?.access_token) {
+        return NextResponse.json({
+            success: false,
+            error: 'Unauthorized'
+        }, { status: 401 })
+    }
+
     const formData = await req.formData();
 
     const updateDestinationSchema = z.object({
