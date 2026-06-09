@@ -56,11 +56,9 @@ export function LoginForm({
       const res = await signIn('credentials', {
         email,
         password,
-        redirect: false,
+        redirect: true,
         callbackUrl: '/'
       })
-
-      console.log(res);
 
       setLoginState(prev => ({
         ...prev,
