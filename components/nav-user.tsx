@@ -104,7 +104,18 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <div className="flex w-full gap-4 items-center" onClick={() => {signOut({callbackUrl: '/login', redirect: false})}}>
+              <div className="flex w-full gap-4 items-center" onClick={async () => {
+                const res = await signOut({
+                  callbackUrl: "/login",
+                  redirect: false,
+                });
+
+                console.log(res);
+
+                if (res?.url) {
+                  router.push(res.url);
+                }
+              }}>
                 <LogOutIcon />
                 Log out
               </div>
