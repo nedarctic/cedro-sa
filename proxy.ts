@@ -35,10 +35,9 @@ async function refreshAccessToken(refreshToken: string, oldToken: any) {
 }
 
 export async function proxy(req: NextRequest) {
-    console.log('PROXY RUNNING...', new Date().getDate());
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     const url = req.nextUrl;
-    // If no token, redirect to login
+    
     if (!token) {
         const signInUrl = new URL("/login", req.url);
         signInUrl.searchParams.set("callbackUrl", url.pathname);
@@ -50,25 +49,21 @@ export async function proxy(req: NextRequest) {
     const isValid = token.expires_at > now;
 
     if (isValid) {
-        console.log('TOKEN VALID, CONTINUING...')
         return NextResponse.next();
     }
 
-    // Token expired – refresh it
     try {
-        console.log('TOKEN EXPIRED. REFRESHING...');
         const newToken = await refreshAccessToken(token.refresh_token, token);
 
         const requestHeaders = new Headers(req.headers);
         requestHeaders.set('x-refreshed-access-token', newToken.access_token);
-        // const response = NextResponse.next();
 
         // Encode the new token back into the session cookie
         const { encode } = await import("next-auth/jwt");
         const newCookieValue = await encode({
             token: newToken,
             secret: process.env.NEXTAUTH_SECRET!,
-            maxAge: 30 * 24 * 60 * 60, // same as session maxAge
+            maxAge: 30 * 24 * 60 * 60,
         });
 
         const response = NextResponse.next({
@@ -84,7 +79,7 @@ export async function proxy(req: NextRequest) {
 
         return response;
     } catch (error) {
-        // Refresh failed – clear cookie and redirect to login
+        
         console.log('ERROR AT MIDDLEWARE', String(error))
         const response = NextResponse.redirect(new URL("/login", req.url));
         response.cookies.delete("next-auth.session-token");
