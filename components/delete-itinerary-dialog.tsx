@@ -16,22 +16,25 @@ import { deleteItinerary } from "@/actions/itineraries.actions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-export function DeleteItineraryDialog({ itineraryId }: { itineraryId: string }) {
+export function DeleteItineraryDialog({ tourId, itineraryId }: { tourId: string; itineraryId: string }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const handleDelete = () => {
     startTransition(async () => {
-      const res = await deleteItinerary(itineraryId);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BFF_API}/api/itineraries/${tourId}/${itineraryId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
 
-      if (res.success) {
+      if (res.ok) {
         setOpen(false);
-        toast.success('Itinerary deleted successfully')
+        toast.success('Delete successful', {description: 'Itinerary deleted successfully'})
         router.refresh();
       } else {
         toast.error("Itinerary was not deleted.", {
-            description: res.error ?? "Something went wrong"
+            description: res.statusText ?? "Something went wrong"
         } )
       }
     });

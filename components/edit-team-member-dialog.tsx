@@ -1,21 +1,20 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogTrigger,
+  DialogClose,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
+import { useState, useTransition } from "react";
 
 import { Field, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { updateTeamMember } from "@/actions/team.actions";
 import { Label } from "./ui/label";
 
 import { toast } from "sonner";
@@ -30,16 +29,20 @@ export function EditTeamMemberDialog({ member }: { member: any }) {
     const formData = new FormData(e.currentTarget);
 
     startTransition(async () => {
-      const res = await updateTeamMember(member.id, formData);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BFF_API}/api/team/${member.id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        body: formData,
+      });
 
-      if (res.success) {
+      if (res.ok) {
         toast.success("Team member updated successfully", {
           description: "Changes have been saved.",
         });
         setOpen(false);
       } else {
         toast.error("Update failed", {
-          description: res.error ?? "Something went wrong.",
+          description: res.statusText ?? "Something went wrong.",
         });
       }
     });

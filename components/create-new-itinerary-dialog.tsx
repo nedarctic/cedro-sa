@@ -1,6 +1,5 @@
 'use client';
 
-import { createItinerary } from "@/actions/itineraries.actions";
 import { Button } from "@/components/ui/button";
 import {
     Field,
@@ -8,9 +7,9 @@ import {
     FieldLabel
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 export function CreateNewItineraryDialog({tourId}: {tourId: string}) {
     const router = useRouter();
@@ -55,7 +54,6 @@ export function CreateNewItineraryDialog({tourId}: {tourId: string}) {
 
         setLoading(true);
 
-        // const result = await createItinerary(tourId, formData);
         const res = await fetch(`${process.env.NEXT_PUBLIC_BFF_API}/api/itineraries/${tourId}`, {
             method: 'POST',
             body: formData,

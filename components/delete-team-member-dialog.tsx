@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogTrigger,
+  DialogClose,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { removeTeamMember } from "@/actions/team.actions";
 import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 export function DeleteTeamMemberDialog({ memberId }: { memberId: string }) {
   const [open, setOpen] = useState(false);
@@ -22,13 +22,17 @@ export function DeleteTeamMemberDialog({ memberId }: { memberId: string }) {
 
   const handleDelete = () => {
     startTransition(async () => {
-      const res = await removeTeamMember(memberId);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BFF_API}/api/team/${memberId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
 
-      if (res.success) {
+      if (res.ok) {
         setOpen(false);
+        toast.success('Delete successful', {description: 'Member removed successfully'})
         router.push("/team");
       } else {
-        console.error(res.error);
+        toast.error('Remove failed', {description: 'Failed to remove team member'});
       }
     });
   };

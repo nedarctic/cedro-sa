@@ -2,19 +2,14 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-
-import { updateTour } from "@/actions/tours.actions";
-
 import { Button } from "@/components/ui/button";
 import {
     Field,
-    FieldDescription,
     FieldGroup,
-    FieldLabel,
+    FieldLabel
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "./ui/textarea";
-
 import {
     Dialog,
     DialogContent,
@@ -23,7 +18,6 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-
 import type { Tour } from "@/app/(dashboard)/tours/page";
 
 export function UpdateTourDialog({ tour }: { tour: Tour }) {
@@ -92,13 +86,17 @@ export function UpdateTourDialog({ tour }: { tour: Tour }) {
 
         setLoading(true);
 
-        const result = await updateTour(tour.id, formData);
+        const result = await fetch(`${process.env.NEXT_PUBLIC_BFF_API}/api/tours/${tour.id}`, {
+            method: 'PATCH',
+            body: formData,
+            credentials: 'include',
+        });
 
         setLoading(false);
 
-        if (!result.success) {
+        if (!result.ok) {
             toast.error("Tour update failed", {
-                description: result.error ?? "Something went wrong.",
+                description: result.statusText ?? "Something went wrong.",
             });
             return;
         }
@@ -121,7 +119,7 @@ export function UpdateTourDialog({ tour }: { tour: Tour }) {
                     </DialogDescription>
                 </DialogHeader>
 
-                {/* 👇 THIS is the key scroll container */}
+
                 <form
                     onSubmit={handleSubmit}
                     className="flex flex-col flex-1 overflow-hidden"

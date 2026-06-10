@@ -1,6 +1,5 @@
 'use client';
 
-import { updateItinerary } from "@/actions/itineraries.actions";
 import { type Itinerary } from "@/app/(dashboard)/tours/page";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,14 +61,18 @@ export function EditItineraryDialog({ tourId, itineraryId, itinerary }: { tourId
 
         setLoading(true);
 
-        const result = await updateItinerary(tourId, itineraryId, formData);
+        const result = await fetch(`${process.env.NEXT_PUBLIC_BFF_API}/api/itineraries/${tourId}/${itineraryId}`, {
+            method: 'PATCH',
+            credentials: 'include',
+            body: formData,
+        });
 
         setLoading(false);
 
-        if (!result.success) {
-            console.error('Error updating itinerary:', result.error)
+        if (!result.ok) {
+            console.error('Error updating itinerary:', result.statusText)
             toast.error("Itinerary update failed", {
-                description: result.error ?? "Something went wrong.",
+                description: result.statusText ?? "Something went wrong.",
             });
             setOpen(false);
         } else {

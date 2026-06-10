@@ -8,10 +8,9 @@ import {
     FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "./ui/textarea";
-import { createTour } from "@/actions/tours.actions";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Textarea } from "./ui/textarea";
 
 export function CreateNewTourComponent() {
     const [loading, setLoading] = useState(false);
@@ -62,13 +61,17 @@ export function CreateNewTourComponent() {
 
         setLoading(true);
 
-        const result = await createTour(formData);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BFF_API}/api/tours`, {
+            method: 'POST',
+            credentials: 'include',
+            body: formData,
+        });
 
         setLoading(false);
 
-        if (!result.success) {
+        if (!res.ok) {
             toast.error("Tour creation failed", {
-                description: result.error ?? "Something went wrong.",
+                description: res.statusText ?? "Something went wrong.",
             });
         } else {
             toast.success("Tour created successfully");

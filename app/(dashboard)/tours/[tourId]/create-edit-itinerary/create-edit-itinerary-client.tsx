@@ -43,10 +43,9 @@ export function CreateEditItineraryClient({ itinerary, tourId, tourTitle }: { it
                                     </ul>
                                 </div>
                                 <EditItineraryDialog itineraryId={itinerary.id} tourId={tourId} itinerary={itinerary} />
-                                <DeleteItineraryDialog itineraryId={itinerary.id} />
+                                <DeleteItineraryDialog tourId={tourId} itineraryId={itinerary.id} />
                             </div>
                         ))}
-
                         <CreateNewItineraryDialog tourId={tourId} />
                     </div>
                 </div>

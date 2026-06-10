@@ -77,3 +77,45 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ it
         }, { status: 500 })
     }
 }
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ itineraryId: string }> }) {
+    const { itineraryId } = await params;
+
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const refreshedToken = req.headers.get('x-refreshed-access-token');
+
+    if (token && refreshedToken) {
+        token.access_token = refreshedToken;
+    }
+
+    if (!token?.access_token) {
+        return NextResponse.json({
+            success: false,
+            error: 'Unauthorized'
+        }, { status: 401 });
+    }
+
+    try {
+        const res = await fetch(`${process.env.BACKEND_API}/itineraries/${itineraryId}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${token.access_token}`
+            },
+        });
+
+        if (!res.ok) {
+            return NextResponse.json({
+                success: false, error: 'Backend request failed.'
+            }, { status: 400 })
+        }
+
+        const data = await res.json();
+
+        return NextResponse.json({ success: true, data })
+
+    } catch (error) {
+        return NextResponse.json({
+            success: false, error: error instanceof Error ? error.message : String(error)
+        }, { status: 500 })
+    }
+}

@@ -1,13 +1,11 @@
 'use client';
 
 import { BreadCrumb } from "@/components/breadcrumb";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { removeTeamMember } from "@/actions/team.actions";
-import { useRouter } from "next/navigation";
-import { EditTeamMemberDialog } from "@/components/edit-team-member-dialog";
 import { DeleteTeamMemberDialog } from "@/components/delete-team-member-dialog";
+import { EditTeamMemberDialog } from "@/components/edit-team-member-dialog";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function MemberDetailsClient({
     data,
@@ -32,13 +30,16 @@ export default function MemberDetailsClient({
     const router = useRouter();
 
     const handleDelete = async () => {
-        const res = await removeTeamMember(data.id);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BFF_API}/api/team/${data.id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+        })
 
-        if (res.success) {
-            alert("Team member removed successfully");
+        if (res.ok) {
+            toast.success("Delete successful", {description: "Member removed successfully"})
             router.push("/team");
         } else {
-            alert("Failed to remove team member");
+            toast.error("Delete failed", {description: "Failed to remove team member"});
         }
     };
 
