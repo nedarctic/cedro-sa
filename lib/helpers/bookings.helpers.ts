@@ -1,13 +1,33 @@
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { getServerSession } from "next-auth";
+import { Booking } from "../types/booking";
 
-export async function getBookings() {
+export async function getBookings(
+    accessToken: string, 
+    page: string = "1", 
+    limit: string = "10",
+    search?: string
+): Promise<{
+    success: boolean,
+    error?: string,
+    data?: {
+        bookings: Booking[],
+        meta: {
+            total: number,
+            limit: number,
+            page: number,
+            totalPages: number,
+        }
+    }
+}> {
 
-    const session = await getServerSession(authOptions);
-    const { accessToken } = session!;
+    const searchParams = new URLSearchParams();
+    search && searchParams.set('search', search.trim());
+    searchParams.set('page', page);
+    searchParams.set('limit', limit);
+
+    const url = new URL(`${process.env.BACKEND_API}/bookings?${searchParams.toString()}`)
 
     try {
-        const res = await fetch(`${process.env.BACKEND_API}/bookings`, {
+        const res = await fetch(url, {
             method: 'GET',
             headers: {
                 Authorization: `Bearer ${accessToken}`
@@ -27,10 +47,11 @@ export async function getBookings() {
     }
 }
 
-export async function getBooking(bookingId: string) {
-
-    const session = await getServerSession(authOptions);
-    const { accessToken } = session!;
+export async function getBooking(accessToken: string, bookingId: string): Promise<{
+    success: boolean,
+    error?: string,
+    data?: Booking
+}> {
 
     try {
         const res = await fetch(`${process.env.BACKEND_API}/bookings/${bookingId}`, {
